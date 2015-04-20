@@ -37,7 +37,7 @@ public final class Opcodes
         "halt", "threaddeath", "unused_fc", "unused_fd", "unused_fe", "unused_ff", "fadd", "dadd", "fsub", "dsub",
         "fmul", "dmul", "fdiv", "ddiv", "frem", "drem", "fneg", "dneg", "i2f", "i2d",
         "l2f", "l2d", "f2i", "f2l", "f2d", "d2i", "d2l", "d2f", "fcmpl", "fcmpg",
-        "dcmpl", "dcmpg", "stringarrayinit", ""
+        "dcmpl", "dcmpg", "stringarrayinit", "unkown_283", "unkown_284", "unkown_285"
     };
 
     public Opcodes()
