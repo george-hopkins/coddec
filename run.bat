@@ -1,0 +1,1 @@
+FOR %%A IN ('DIR *.cod /B') DO java.exe -classpath c:\coddec\bin\Release net.rim.tools.compiler.Compiler %%A
