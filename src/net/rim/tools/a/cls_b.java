@@ -101,7 +101,7 @@ public class cls_b
 	
 	private static String create_package_path(String param_packageName)
 	{
-		String package_path = "decompiled\\" + param_packageName.replace(".","\\");
+		String package_path = "decompiled" + File.separator + param_packageName.replace(".", File.separator);
 			
 		File package_folder = new File (package_path);
 		if (!package_folder.exists())
@@ -537,7 +537,7 @@ public class cls_b
 			String local_packageName = _ClassDefLocal_.getPackageNameString();
 			String _moduleName_ = _ClassDefLocal_.getModule().getName().getString();
 			String local_package_path = create_package_path(_moduleName_ + "." + local_packageName);
-			String local_className = local_package_path + "\\"+ _ClassDefLocal_.getClassNameString() +  ".java";
+			String local_className = local_package_path + File.separator + _ClassDefLocal_.getClassNameString() +  ".java";
 			FileOutputStream javaOutputStream = new FileOutputStream(local_className);
 			try
 			{

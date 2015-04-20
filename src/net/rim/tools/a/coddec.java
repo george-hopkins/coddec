@@ -864,7 +864,7 @@ public final class coddec
 	
 	private static String createPackagePath(String __packageName)
 	{
-		String _packagePath_ = "decompiled\\" + __packageName.replace(".","\\");
+		String _packagePath_ = "decompiled" + File.separator + __packageName.replace(".", File.separator);
 		
 		File _packageFolder_ = new File (_packagePath_);
 		if (!_packageFolder_.exists())
@@ -889,11 +889,11 @@ public final class coddec
 			StringBuffer _stringBuf_ = new StringBuffer();
 			StringBuffer _importsBuf_ = new StringBuffer("");
 
-			String _pathString =createPackagePath(currentFileHackCrap + "\\" + __classDef.getPackageNameString()) + "\\"+ __classDef.getClassNameString() +  ".java";
+			String _pathString =createPackagePath(currentFileHackCrap + File.separator + __classDef.getPackageNameString()) + File.separator + __classDef.getClassNameString() +  ".java";
 			File fofo = new File(_pathString);
 			if (fofo.exists()) {
 				System.err.println("DUP PATH " + _pathString);
-				_pathString = createPackagePath(currentFileHackCrap + "\\" + __classDef.getPackageNameString()) + "\\"+ __classDef.getClassNameString() + "__" + Math.abs(new Random().nextInt()) + "" + Math.abs(new Random().nextInt()) +  ".java";
+				_pathString = createPackagePath(currentFileHackCrap + File.separator + __classDef.getPackageNameString()) + File.separator + __classDef.getClassNameString() + "__" + Math.abs(new Random().nextInt()) + "" + Math.abs(new Random().nextInt()) +  ".java";
 			}
 			FileOutputStream _javaOutputStream_ = new FileOutputStream(_pathString);
 			try

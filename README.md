@@ -2,6 +2,19 @@
 
 **coddec** is a Java disassembler for BlackBerry apps (*.cod files) written by [Dr. Bolsen](https://drbolsen.wordpress.com/). This repository contains a mirror of the project to preserve it for future usage.
 
+## Usage
+
+```bash
+gradle run yourapp.cod
+```
+
+or
+
+```bash
+gradle build
+java -jar build/libs/coddec.jar yourapp.cod
+```
+
 
 ## Resources
 

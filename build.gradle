@@ -1,0 +1,19 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'application'
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+}
+
+mainClassName = 'net.rim.tools.compiler.Compiler'
+
+jar {
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+}

@@ -15,7 +15,7 @@ import java.util.zip.*;
 
 public class c
 {
-    static class c
+    static class c2
     {
 
         private static final int z_ifI = 4;
@@ -154,7 +154,7 @@ public class c
             z_charDeflater.end();
         }
 
-        public c(int j, int k, int l, DataOutputStream dataoutputstream)
+        public c2(int j, int k, int l, DataOutputStream dataoutputstream)
         {
             z_gotoc$b = new net.rim.tools.compiler.exec.cls_c$b();
             z_caseI = l;
@@ -343,7 +343,7 @@ public class c
                 _ac$aDSDV(a1, dataoutputstream1, dataoutputstream, crc32);
             }
             dataoutputstream1.write(z_intaB, 0, z_intaB.length);
-            c c1 = new c(l, j, i1, dataoutputstream1);
+            c2 c1 = new c2(l, j, i1, dataoutputstream1);
             try
             {
                 int j2 = 0;
