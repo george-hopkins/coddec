@@ -138,6 +138,14 @@ implements net.rim.tools.compiler.vm.Constants
         else
             return (net.rim.tools.compiler.codfile.ClassDef)_classDefs.elementAt(i);
     }
+    public void cockItUp()
+    {
+    	for (int i = 0; i < _classDefs.size(); i++) {
+    		net.rim.tools.compiler.codfile.ClassDef cd = (net.rim.tools.compiler.codfile.ClassDef)_classDefs.elementAt(i);
+    		if (cd == null) continue;
+    		System.out.println(" # " + i + " " + cd.get_Name() + " " + cd.get_name_1() + " " + cd.get_name_2() + " " +cd.getClassNameString());
+    	}
+    }
 
     public net.rim.tools.compiler.codfile.ClassDef getNullClassDef()
     {

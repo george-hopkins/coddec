@@ -45,31 +45,40 @@ public final class ClassRef extends net.rim.tools.compiler.codfile.CodfileItem
         int j = a2.readUnsignedShort();
         _module = k1.getModule(j);
         net.rim.tools.compiler.codfile.DataBytes a1_1 = k1.getDataBytes();
-        _packageName = a1_1.get_identifier(a2.readUnsignedShort());
-        _className = a1_1.get_identifier(a2.readUnsignedShort());
+        int pkgId = a2.readUnsignedShort();
+        int clsId = a2.readUnsignedShort();
+        _packageName = a1_1.get_identifier(pkgId);
+        _className = a1_1.get_identifier(clsId);
+        System.out.println("---- ModId 0x" + Integer.toHexString(j) + " PkgId " + Integer.toHexString(pkgId) + " = " + _packageName.getString() +
+        		" ClsId " + Integer.toHexString(clsId) + " = " + _className.getString());
+        System.out.println("----- Mod Ord " + _module.getOrdinal() + " names " + _module.get_Name() + " " + _module.get_name_1() + " " + _module.get_name_2());
         _bgvV();
         z_hnI = a2.readUnsignedByte();
         z_hjI = a2.readUnsignedByte();
         if(j != 0)
             if(_module instanceof net.rim.tools.compiler.codfile.ModuleDomestic)
             {
+            	System.out.println("---- DOMESTIC");
                 _classDef = new net.rim.tools.compiler.codfile.ClassDefForeign(k1, _module, _packageName, _className);
                 _module._ifuV(_classDef);
             } else
             if(_module instanceof net.rim.tools.compiler.codfile.ModuleRef)
             {
+            	System.out.println("---- REF");
                 net.rim.tools.compiler.codfile.ModuleRef g1 = (net.rim.tools.compiler.codfile.ModuleRef)_module;
                 _classDef = new net.rim.tools.compiler.codfile.ClassDefDomestic(k1, _module, _packageName, _className);
                 g1._auvV(_classDef, z_hjI);
             } else
             if(_module instanceof net.rim.tools.compiler.codfile.ModuleForeign)
             {
+            	System.out.println("---- FOREIGN");
                 net.rim.tools.compiler.codfile.ModuleForeign au1 = (net.rim.tools.compiler.codfile.ModuleForeign)_module;
                 _classDef = new net.rim.tools.compiler.codfile.l(k1, _module, _packageName, _className);
                 au1._ifuvV(_classDef, z_hjI);
             } else
             if(_module instanceof net.rim.tools.compiler.codfile.ModuleNull)
             {
+            	System.out.println("---- NULL");
                 _classDef = new net.rim.tools.compiler.codfile.ClassDefNull(k1, _packageName, _className);
                 _classDef.setModule(_module);
             }

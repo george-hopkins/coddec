@@ -34,10 +34,10 @@ public abstract class FieldDef extends net.rim.tools.compiler.codfile.Member
         _isStatic = flag;
     }
 
-    protected FieldDef(net.rim.tools.compiler.codfile.ClassDef u1, int i, boolean flag)
+    protected FieldDef(net.rim.tools.compiler.codfile.ClassDef u1, int offset, boolean isStatic)
     {
-        super(u1, i);
-        _isStatic = flag;
+        super(u1, offset);
+        _isStatic = isStatic;
     }
 
     public void setName(String s)
@@ -56,11 +56,14 @@ public abstract class FieldDef extends net.rim.tools.compiler.codfile.Member
         net.rim.tools.compiler.codfile.FixupTableEntry an1 = null;
         if(u1 == super._classDef)
         {
+        	System.out.println("BLINGO 1");
             an1 = _fixups;
             if(obj != null)
             {
+            	System.out.println("BLINGO 2");
                 if(an1 == null)
                 {
+                	System.out.println("BLINGO 3");
                     net.rim.tools.compiler.codfile.DataSection k1 = (DataSection)obj;
                     makeSymbolic(k1);
                     an1 = _fixups = new net.rim.tools.compiler.codfile.FixupTableEntry(2);
@@ -68,10 +71,13 @@ public abstract class FieldDef extends net.rim.tools.compiler.codfile.Member
                 }
                 an1._adIV(c1.getOffset());
             }
-            if(an1 != null)
+            if(an1 != null) {
+            	System.out.println("BLINGO 99");
                 i = an1.getOrdinal();
+            }
         } else
         {
+        	System.out.println("BLINGO 4");
             if(obj != null && z_fzVector == null)
                 z_fzVector = new Vector();
             int l = z_fzVector != null ? z_fzVector.size() : 0;
@@ -87,8 +93,10 @@ public abstract class FieldDef extends net.rim.tools.compiler.codfile.Member
 
             if(obj != null)
             {
+            	System.out.println("BLINGO 5");
                 if(an1 == null)
                 {
+                	System.out.println("BLINGO 6");
                     net.rim.tools.compiler.codfile.DataSection k2 = (DataSection)obj;
                     makeSymbolic(k2);
                     an1 = new net.rim.tools.compiler.codfile.FixupTableEntry(2);

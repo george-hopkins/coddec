@@ -24,10 +24,10 @@ public final class FieldDefLocal extends net.rim.tools.compiler.codfile.FieldDef
         super(u1, ak1, p, flag);
     }
 
-    public FieldDefLocal(net.rim.tools.compiler.io.StructuredInputStream a2, net.rim.tools.compiler.codfile.DataSection k1, net.rim.tools.compiler.codfile.ClassDef u1, boolean flag)
+    public FieldDefLocal(net.rim.tools.compiler.io.StructuredInputStream a2, net.rim.tools.compiler.codfile.DataSection k1, net.rim.tools.compiler.codfile.ClassDef u1, boolean isStatic)
         throws IOException
     {
-        super(u1, a2.getOffset(), flag);
+        super(u1, a2.getOffset(), isStatic);
         read(a2, k1);
     }
 
@@ -51,11 +51,13 @@ public final class FieldDefLocal extends net.rim.tools.compiler.codfile.FieldDef
     protected int addFixup(net.rim.tools.compiler.io.StructuredOutputStream c1, net.rim.tools.compiler.codfile.ClassDef u1)
     {
         int i = -1;
-        if(super._isStatic)
+        if(super._isStatic) {
+        	System.out.println("LLINGO 1");
             i = super.addFixup(c1, u1);
-        else
+        } else
         if(super._ordinal > 255)
         {
+        	System.out.println("LLINGO 2");
             Object obj = c1.getCookie();
             if(obj != null)
             {
@@ -70,6 +72,7 @@ public final class FieldDefLocal extends net.rim.tools.compiler.codfile.FieldDef
             Object obj1 = c1.getCookie();
             if(obj1 != null)
             {
+            	System.out.println("LLINGO 3");
                 if(super._fixups == null)
                 {
                     super._fixups = new net.rim.tools.compiler.codfile.FixupTableEntry(1);
@@ -141,7 +144,7 @@ public final class FieldDefLocal extends net.rim.tools.compiler.codfile.FieldDef
                 k1._foranV(super._fixups);
     }
 
-    public static int _ifZI(boolean flag)
+    public static int elementSize(boolean flag)
     {
         return flag ? 6 : 4;
     }

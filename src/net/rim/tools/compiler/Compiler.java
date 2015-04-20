@@ -1244,6 +1244,7 @@ public class Compiler
         String _packageName_ = null;
         String _className_ = __className;
         String s6 = null;
+        System.out.println("PARSE " + __packageName + " " + __className + " " + __moduleName);
         if(__moduleName != null)
         {
             s6 = "module:" + __moduleName + ".class#" + l;

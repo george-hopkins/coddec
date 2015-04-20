@@ -11,6 +11,7 @@ import net.rim.tools.compiler.exec.MyArrays;
 import net.rim.tools.compiler.classfile.InstructionTarget;
 import net.rim.tools.compiler.io.StructuredInputStream;
 import net.rim.tools.a.coddec;
+import java.util.Vector;
 
 // Referenced classes of package net.rim.tools.compiler.d:
 //            ap, a6, h, f,
@@ -31,6 +32,10 @@ implements net.rim.tools.compiler.vm.Constants
     private boolean z_hUZ;
     private boolean _aliasesFlag;
     private int _linesMap[];
+    private boolean _needsLabelMap[];
+    private boolean _opnumsNeedsLabelMap[];
+    private boolean _doNameCrap = false; // to print out lots of commented-out names, because there are 4-8 ways to get names of things and they're all different
+    private boolean _appendOpcodeBytes = false; // append opcode bytes to aid debugging
 
     public Code()
     {
@@ -52,6 +57,8 @@ implements net.rim.tools.compiler.vm.Constants
             _constants = new int[super._extent];
             _parametersIndex = new short[super._extent];
             _linesMap = new int[super._extent];
+            _needsLabelMap = new boolean[super._extent];
+            _opnumsNeedsLabelMap = new boolean[super._extent]; // bigger than necessary
             boolean flag1 = __dataSection._YvZ();
             int j = 0;
             int _offset_ = super._offset;
@@ -224,12 +231,14 @@ implements net.rim.tools.compiler.vm.Constants
                 case 161:
                     _offset_ = __input.getOffset();
 						net.rim.tools.compiler.codfile.CodfileLabel a6_1 = new net.rim.tools.compiler.codfile.CodfileLabel((__input.readByte() + _offset_) - super._offset);
+						_needsLabelMap[a6_1.getEnd()] = true;
                     _parametersIndex[_opcodesNum] = addObjectRef(a6_1);
                     break;
 
                 case 162:
                     _offset_ = __input.getOffset();
 						CodfileLabel a6_2 = new net.rim.tools.compiler.codfile.CodfileLabel((__input.readShort() + _offset_) - super._offset);
+						_needsLabelMap[a6_2.getEnd()] = true;
                     _parametersIndex[_opcodesNum] = addObjectRef(a6_2);
                     break;
 
@@ -317,11 +326,13 @@ implements net.rim.tools.compiler.vm.Constants
                             _offset_ += 4;
                         }
                         aa6[k5 + 1] = new net.rim.tools.compiler.codfile.CodfileLabel((__input.readShort() + _offset_) - super._offset);
+                        _needsLabelMap[aa6[k5+1].getEnd()] = true;
                         _offset_ += 2;
                     }
 
 						aa6[0] = new net.rim.tools.compiler.codfile.CodfileLabel((__input.readShort() + _offset_) - super._offset);
-                    _parametersIndex[_opcodesNum] = addObjectRef(ai);
+						_needsLabelMap[aa6[0].getEnd()] = true;
+						_parametersIndex[_opcodesNum] = addObjectRef(ai);
                     addObjectRef(aa6);
                     break;
 
@@ -336,6 +347,7 @@ implements net.rim.tools.compiler.vm.Constants
                     for(int l5 = 0; l5 < l3; l5++)
                     {
                         aa6_1[l5] = new net.rim.tools.compiler.codfile.CodfileLabel((__input.readShort() + _offset_) - super._offset);
+                        _needsLabelMap[aa6_1[l5].getEnd()] = true;
                         _offset_ += 2;
                     }
 
@@ -374,6 +386,8 @@ implements net.rim.tools.compiler.vm.Constants
 						net.rim.tools.compiler.codfile.FieldDef w;
                     if(l1 != 255)
                     {
+                    	/*System.out.println("-------------------- VARIOUS CLASS/MODULES DEFS");
+                    	__dataSection.cockItUp();*/
                         u1 = __dataSection.getClassDef(l1, i4);
                         w = u1.createFieldDef(i2, true);
                     } else
@@ -394,7 +408,7 @@ implements net.rim.tools.compiler.vm.Constants
                 case 101: // 'e'
                 case 103: // 'g'
                     int j2 = flag1 ? __input.readUnsignedByte() : ((int) (__input.readByte()));
-                    _parametersIndex[_opcodesNum] = addObjectRef(__dataSection._tIw(j2));
+                    _parametersIndex[_opcodesNum] = addObjectRef(__dataSection.getField(j2));
                     break;
 
                 case 26: // '\032'
@@ -406,7 +420,7 @@ implements net.rim.tools.compiler.vm.Constants
                 case 102: // 'f'
                 case 104: // 'h'
                     int k2 = (flag1 ? __input.readUnsignedByte() : __input.readByte()) + 256;
-                    _parametersIndex[_opcodesNum] = addObjectRef(__dataSection._tIw(k2));
+                    _parametersIndex[_opcodesNum] = addObjectRef(__dataSection.getField(k2));
                     break;
 
                 case 8: // '\b'
@@ -451,7 +465,7 @@ implements net.rim.tools.compiler.vm.Constants
                     break;
 
                 case 1: // '\001'
-						net.rim.tools.compiler.codfile.Routine a5_4 = __dataSection._yIa5(__input.readShort());
+						net.rim.tools.compiler.codfile.Routine a5_4 = __dataSection.getVirtualRoutine(__input.readShort());
                     a5_4.setLocalCount(__input.readUnsignedByte());
                     _parametersIndex[_opcodesNum] = addObjectRef(a5_4);
                     break;
@@ -461,7 +475,7 @@ implements net.rim.tools.compiler.vm.Constants
                     int i6 = i5 >> 2;
                     i5 &= 3;
                     i5++;
-						net.rim.tools.compiler.codfile.Routine a5_5 = __dataSection._yIa5(i6);
+						net.rim.tools.compiler.codfile.Routine a5_5 = __dataSection.getVirtualRoutine(i6);
                     a5_5.setLocalCount(i5);
                     _parametersIndex[_opcodesNum] = addObjectRef(a5_5);
                     break;
@@ -515,6 +529,7 @@ implements net.rim.tools.compiler.vm.Constants
 
                 case 166:
                     _ifIIV(__input.readUnsignedByte(), __input.readUnsignedByte(), __input.readUnsignedByte());
+                    
                     break;
 
                 case 171:
@@ -541,6 +556,7 @@ implements net.rim.tools.compiler.vm.Constants
                         u3 = __dataSection.getClassDef(l1, __input.readUnsignedByte());
                     _offset_ = __input.getOffset();
 						net.rim.tools.compiler.codfile.CodfileLabel a6_3 = new CodfileLabel((__input.readShort() + _offset_) - super._offset);
+                    _needsLabelMap[a6_3.getEnd()] = true;
                     _parametersIndex[_opcodesNum] = addObjectRef(u3);
                     addObjectRef(a6_3);
                     break;
@@ -549,6 +565,7 @@ implements net.rim.tools.compiler.vm.Constants
                     _doIIV(__input.readUnsignedByte(), __input.readUnsignedByte());
                     _offset_ = __input.getOffset();
 						net.rim.tools.compiler.codfile.CodfileLabel a6_4 = new net.rim.tools.compiler.codfile.CodfileLabel((__input.readShort() + _offset_) - super._offset);
+                    _needsLabelMap[a6_4.getEnd()] = true;
                     _parametersIndex[_opcodesNum] = addObjectRef(a6_4);
                     break;
 
@@ -596,7 +613,12 @@ implements net.rim.tools.compiler.vm.Constants
                 _opcodes[_opcodesNum] = (byte)_opcode_;
                 _opcodesNum++;
             }
-
+            for (int i = 0; i < _needsLabelMap.length; i++) {
+            	if (_needsLabelMap[i]) {
+            		int opnum = _linesMap[i]-1; // the lines maps is 1-based...
+            		_opnumsNeedsLabelMap[opnum] = true;
+            	}
+            }
         }
         __input.verifyOffset(super._offset + super._extent, "routine end of code");
     }
@@ -1248,6 +1270,19 @@ implements net.rim.tools.compiler.vm.Constants
 
         setExtent(__output);
     }
+    
+    public String hexify(int val)
+    {
+        int lo, hi, tri;
+        lo = (val & 0xf);
+        hi = ((val >> 4) & 0xf);
+        tri = ((val >> 8) & 0xf);
+        if (tri > 0) {
+            return Integer.toHexString(tri) + Integer.toHexString(hi) + Integer.toHexString(lo);
+        } else {
+            return Integer.toHexString(hi) + Integer.toHexString(lo);
+        }
+    }
 	
 	public void disassemble (net.rim.tools.compiler.io.StructuredOutputStream __output, StringBuffer __message)
 	throws IOException
@@ -1308,8 +1343,11 @@ implements net.rim.tools.compiler.vm.Constants
 					
 				default:
 					__output.writeByte(_opcode_, net.rim.tools.compiler.vm.Opcodes.opcodes[_opcode_], false);
+					if (_opnumsNeedsLabelMap[_index_]) {
+						_source_.append("Label" + _index_ + ":\r\n");
+					}
 					_source_.append("\t");
-					_source_.append(_index_ + " : ");
+//					_source_.append(_index_ + " : ");
 					_source_.append(net.rim.tools.compiler.vm.Opcodes.opcodes[_opcode_]+ " ");
 					switch(_opcode_)
 					{
@@ -1584,16 +1622,19 @@ implements net.rim.tools.compiler.vm.Constants
 						case 190:
 							__output.writeByte(_akII(_index_), "nesting=", true);
 							__output.writeByte(getValue(_index_), "type=", true);
+							_source_.append(_akII(_index_) + " " + getValue(_index_)); // serious work needs to be done here
 							break;
 							
 						case 120: // 'x'
 							__output.writeByte(_akII(_index_), "local=", true);
 							__output.writeByte(getValue(_index_), "value=", true);
+							_source_.append(_akII(_index_) + " " + getValue(_index_));
 							break;
 							
 						case 121: // 'y'
 							__output.writeShort(_akII(_index_), "local=", true);
 							__output.writeShort(getValue(_index_), "value=", true);
+							_source_.append(_akII(_index_) + " " + getValue(_index_));
 							break;
 							
 						case 39: // '\''
@@ -1618,14 +1659,27 @@ implements net.rim.tools.compiler.vm.Constants
 							if (_member_ instanceof Routine)
 							{
 							    _source_.append(((Routine)_member_).get_Name());
+							    _source_.append(" // " + _classDef_.getClassNameString());
+								if (_doNameCrap) {
 								_source_.append("   // get_name_1:  " + ((Routine)_member_).get_name_1());
 								_source_.append("   // get_name_2:  " + ((Routine)_member_).get_name_2());
+								_source_.append("   // GNgn1     :  " + ((Routine)_member_).getName().get_name_1());
+								_source_.append("   // GNgn2     :  " + ((Routine)_member_).getName().get_name_2());
+								_source_.append("   // GNgN      :  " + ((Routine)_member_).getName().get_Name());
+								}
 							}
 							if (_member_ instanceof FieldDef)
 							{
 								_source_.append(((FieldDef)_member_).get_Name());
+								_source_.append(" // " + _classDef_.getClassNameString());
+								if (_doNameCrap) {
+									_source_.append(" // " + _classDef_.getClassNameString());
 								_source_.append("   // get_name_1:  " + ((FieldDef)_member_).get_name_1());
 								_source_.append("   // get_name_2:  " + ((FieldDef)_member_).get_name_2());
+								_source_.append("   // GNgn1     :  " + ((FieldDef)_member_).getName().get_name_1());
+								_source_.append("   // GNgn2     :  " + ((FieldDef)_member_).getName().get_name_2());
+								_source_.append("   // GNgN      :  " + ((FieldDef)_member_).getName().get_Name());
+								}
 
 							}
 							break;
@@ -1647,11 +1701,20 @@ implements net.rim.tools.compiler.vm.Constants
 						case 103: // 'g'
 						case 104: // 'h'
 							net.rim.tools.compiler.codfile.Member _member_1_ =((net.rim.tools.compiler.codfile.Member)getObjectRef(_index_, 0));
+							if (_constants_[_index_] != 0) {
+								System.out.println("BBBBBBBBBBBBLLLLLING BLING BLING");
+							}
 							_member_1_.writeMemberAddress(__output, _constants_[_index_] != 0);
-							_member_1_.get_name_1();
 							_source_.append(_member_1_.get_Name());
+							if (_doNameCrap||true) {
 							_source_.append("   // get_name_1:  " + _member_1_.get_name_1());
 							_source_.append("   // get_name_2:  " + _member_1_.get_name_2());
+							_source_.append("   // get_Name:    " + _member_1_.get_Name());
+							_source_.append("   // getName->1:  " + _member_1_.getName().get_name_1());
+							_source_.append("   // getName->2:  " + _member_1_.getName().get_name_2());
+							_source_.append("   // getName->N:  " + _member_1_.getName().get_Name());
+							_source_.append("   // ofs = " + _member_1_.getOffset() + " ord = " + _member_1_.getOrdinal() + " addr = " + _member_1_.getAddress());
+							}
 							
 							break;
 							
@@ -1662,8 +1725,13 @@ implements net.rim.tools.compiler.vm.Constants
 							//__output.writeByte(_routine_.getLocalCount(), "parmcount=", true);
 							//((net.rim.tools.compiler.codfile.RoutineLocal)_routine_).writeNativeInvoke(__output);
 							_source_.append(_routine_.get_Name());
+							if (_doNameCrap) {
 							_source_.append("   // get_name_1:  " + _routine_.get_name_1());
 							_source_.append("   // get_name_2:  " + _routine_.get_name_2());
+							_source_.append("   // getName->1:  " + _routine_.getName().get_name_1());
+							_source_.append("   // getName->2:  " + _routine_.getName().get_name_2());
+							_source_.append("   // getName->N:  " + _routine_.getName().get_Name());
+							}
 							break;
 							
 						case 12: // '\f'
@@ -1671,8 +1739,13 @@ implements net.rim.tools.compiler.vm.Constants
 							net.rim.tools.compiler.codfile.Routine _routine_1_ = (net.rim.tools.compiler.codfile.Routine)getObjectRef(_index_, 0);
 							_routine_1_.writeOffset(__output);
 							_source_.append(_routine_1_.get_Name());
+							if (_doNameCrap) {
 							_source_.append("   // get_name_1:  " + _routine_1_.get_name_1());
 							_source_.append("   // get_name_2:  " + _routine_1_.get_name_2());
+							_source_.append("   // getName->1:  " + _routine_1_.getName().get_name_1());
+							_source_.append("   // getName->2:  " + _routine_1_.getName().get_name_2());
+							_source_.append("   // getName->N:  " + _routine_1_.getName().get_Name());
+							}
 							break;
 							
 						case 3: // '\003'
@@ -1685,8 +1758,14 @@ implements net.rim.tools.compiler.vm.Constants
 							 
 							//_routine_2_.getClassDef().getClassNameString() + " " +
 							_source_.append(_routine_2_.get_name_2());
+							_source_.append(" // pc="+_routine_2_.getLocalCount());
+							if (_doNameCrap) {
 							_source_.append("   // get_name_1:  " + _routine_2_.get_name_1());
 							_source_.append("   // get_name_2:  " + _routine_2_.get_name_2());
+							_source_.append("   // getName->1:  " + _routine_2_.getName().get_name_1());
+							_source_.append("   // getName->2:  " + _routine_2_.getName().get_name_2());
+							_source_.append("   // getName->N:  " + _routine_2_.getName().get_Name());
+							}
 							break;
 							
 						case 1: // '\001'
@@ -1694,8 +1773,14 @@ implements net.rim.tools.compiler.vm.Constants
 							//_routine_3_.writeMemberAddress(__output, _constants_[_index_] != 0);
 							//__output.writeByte(_routine_3_.getLocalCount(), "parmcount=", true);
 							_source_.append(_routine_3_.get_Name());
+							_source_.append(" // pc="+_routine_3_.getLocalCount());
+							if (_doNameCrap) {
 							_source_.append("   // get_name_1:  " + _routine_3_.get_name_1());
 							_source_.append("   // get_name_2:  " + _routine_3_.get_name_2());
+							_source_.append("   // getName->1:  " + _routine_3_.getName().get_name_1());
+							_source_.append("   // getName->2:  " + _routine_3_.getName().get_name_2());
+							_source_.append("   // getName->N:  " + _routine_3_.getName().get_Name());
+							}
 							break;
 							
 						case 222:
@@ -1710,7 +1795,17 @@ implements net.rim.tools.compiler.vm.Constants
 							__output.empty_func8(l4);
 							k4 |= l4 - 1;
 							__output.writeByte(k4);
-							_source_.append(_routine_4_.get_name_1());
+							// get_name_1 may be crap....
+							//_source_.append(_routine_4_.get_name_1());
+							_source_.append(_routine_4_.get_name_2());
+							_source_.append(" // idx=" + l3 + " pc=" + l4);
+							if (_doNameCrap) {
+							_source_.append("   // get_name_1:  " + _routine_4_.get_name_1());
+							_source_.append("   // get_name_2:  " + _routine_4_.get_name_2());
+							_source_.append("   // getName->1:  " + _routine_4_.getName().get_name_1());
+							_source_.append("   // getName->2:  " + _routine_4_.getName().get_name_2());
+							_source_.append("   // getName->N:  " + _routine_4_.getName().get_Name());
+							}
 							break;
 							
 						case 2: // '\002'
@@ -1719,8 +1814,14 @@ implements net.rim.tools.compiler.vm.Constants
 							//__output.writeByte(_akII(_index_), "parmcount=", true);
 							//__output.writeShort(getValue(_index_), "guess=", true);
 							_source_.append(_interfaceMethod_.get_Name());
+							_source_.append(" // pc="+_akII(_index_) + " guess=" + getValue(_index_));
+							if (_doNameCrap) {
 							_source_.append("   // get_name_1:  " + _interfaceMethod_.get_name_1());
 							_source_.append("   // get_name_2:  " + _interfaceMethod_.get_name_2());
+//							_source_.append("   // getName->1:  " + _interfaceMethod_.getName().get_name_1());
+							//_source_.append("   // getName->2:  " + _interfaceMethod_.getName().get_name_2());
+							//_source_.append("   // getName->N:  " + _interfaceMethod_.getName().get_Name());
+							}
 							break;
 							
 						case 169:
@@ -1733,7 +1834,10 @@ implements net.rim.tools.compiler.vm.Constants
 								_classDef_1_.writeAbsoluteClassDef(__output);
 							else
 								_classDef_1_.writeOrdinal(__output);
-							_source_.append(_classDef_1_.getClassNameString());
+							String _typeName_1_ = net.rim.tools.a.coddec.getTypeName(_classDef_1_);
+							_source_.append(_typeName_1_);
+							//_source_.append(_classDef_1_.getClassNameString());
+							_source_.append("//" + _classDef_1_.get_Name() + " " + _classDef_1_.get_name_1() + " " + _classDef_1_.get_name_2());
 							break;
 							
 						case 19: // '\023'
@@ -1770,6 +1874,10 @@ implements net.rim.tools.compiler.vm.Constants
 							__output.writeByte(_apII(_index_), "dimensions=", true);
 							__output.writeByte(_alII(_index_), "nesting=", true);
 							__output.writeByte(_ajII(_index_), "type=", true);
+							int _dimensions_166_ = _apII(_index_);
+							int _nesting_166_ = _alII(_index_);
+							int _type_166_ = _ajII(_index_);
+							_source_.append(" // dim="+_dimensions_166_+" nest="+_nesting_166_+" type="+_type_166_);
 							break;
 							
 						case 171:
@@ -1876,10 +1984,12 @@ implements net.rim.tools.compiler.vm.Constants
 							if(_constants_[_index_] == 0)
 							{
 								int k2 = getBranchTarget(_label_4_, __output);
+								_source_.append("Label" + (_linesMap[_label_4_.getEnd()] - 1));
 								__output.empty_func4(k2, 2);
 								__output.writeByte(k2);
 							} else
 							{
+								_source_.append("**** FUCKIT ****\r\n");
 								int l2 = 4;
 								__output.empty_func4(l2, 2);
 								__output.writeByte(l2);
@@ -1895,16 +2005,22 @@ implements net.rim.tools.compiler.vm.Constants
 						case 161:
 							net.rim.tools.compiler.codfile.CodfileLabel _lable_5_ = (net.rim.tools.compiler.codfile.CodfileLabel)getObjectRef(_index_, 0);
 							int i3 = getBranchTarget(_lable_5_, __output);
+							_source_.append("Label" + (_linesMap[_lable_5_.getEnd()] - 1));
 							__output.empty_func4(i3, 2);
 							__output.writeByte(i3);
 							break;
 							
 						case 162:
 							net.rim.tools.compiler.codfile.CodfileLabel _label_6_ = (net.rim.tools.compiler.codfile.CodfileLabel)getObjectRef(_index_, 0);
+							_source_.append("Label" + (_linesMap[_label_6_.getEnd()] - 1));
 							int j3 = getBranchTarget(_label_6_, __output);
 							__output.empty_func4(j3, 2);
 							__output.writeShort(j3);
 							break;
+					}
+
+					if (_appendOpcodeBytes) {
+						_source_.append(" // " + _index_ + ": " + hexify(_opcode_) + " (" + Integer.toString(_opcode_) + ")");
 					}
 					_source_.append("\r\n");
 					__output.empty_func7();

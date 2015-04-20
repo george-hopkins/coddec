@@ -172,16 +172,16 @@ public final class ClassDefLocal extends net.rim.tools.compiler.codfile.ClassDef
         }
     }
 
-    private void readFieldDefs(net.rim.tools.compiler.io.StructuredInputStream __input, net.rim.tools.compiler.codfile.DataSection k1, int j, int l, boolean flag)
+    private void readFieldDefs(net.rim.tools.compiler.io.StructuredInputStream __input, net.rim.tools.compiler.codfile.DataSection k1, int j, int l, boolean isStatic)
         throws IOException
     {
         __input.verifyOffset(j, "field def");
-        int i1 = (l - j) / net.rim.tools.compiler.codfile.FieldDefLocal._ifZI(flag);
-        allocateFieldDefs(i1, flag);
+        int i1 = (l - j) / net.rim.tools.compiler.codfile.FieldDefLocal.elementSize(isStatic);
+        allocateFieldDefs(i1, isStatic);
         for(int j1 = 0; j1 < i1; j1++)
         {
-            net.rim.tools.compiler.codfile.FieldDefLocal ab1 = new net.rim.tools.compiler.codfile.FieldDefLocal(__input, k1, this, flag);
-            addFieldDef(ab1, flag);
+            net.rim.tools.compiler.codfile.FieldDefLocal ab1 = new net.rim.tools.compiler.codfile.FieldDefLocal(__input, k1, this, isStatic);
+            addFieldDef(ab1, isStatic);
         }
 
     }

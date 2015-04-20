@@ -31,9 +31,9 @@ public abstract class Member extends net.rim.tools.compiler.codfile.CodfileItem
         setName(ak1.getString());
     }
 
-    public Member(net.rim.tools.compiler.codfile.ClassDef u, int i)
+    public Member(net.rim.tools.compiler.codfile.ClassDef u, int offset)
     {
-        super(i);
+        super(offset);
         _classDef = u;
     }
 

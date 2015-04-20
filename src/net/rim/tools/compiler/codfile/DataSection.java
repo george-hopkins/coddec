@@ -61,6 +61,8 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
     private boolean _aliasesFlag;
     private boolean z_eYZ;
     private boolean z_e7Z;
+    private boolean fh;
+    private boolean _isVersion6;
     private net.rim.tools.compiler.codfile.CodfileVector _fixedFields;
     private net.rim.tools.compiler.codfile.CodfileVector _classDataFixups;
     private net.rim.tools.compiler.codfile.CodfileVector _nativeRoutines;
@@ -94,6 +96,8 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
         _fieldsFixups = new net.rim.tools.compiler.codfile.CodfileVector(2, true);
         _localFieldsFixups = new net.rim.tools.compiler.codfile.CodfileVector(2, true);
         _staticFieldsFixups = new net.rim.tools.compiler.codfile.CodfileVector(2, true);
+        _isVersion6 = false;
+        fh = true;
         z_eGZ = true;
         z_e4Z = true;
         _moduleCodeFixups = new net.rim.tools.compiler.codfile.CodfileVector(2, true);
@@ -127,7 +131,15 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
         _nativeRoutines = new net.rim.tools.compiler.codfile.CodfileVector(2, true);
         _nativeRoutines.setTableName("native routine table");
         _moduleCodeFixups.setTableName("module code fixup table");
-        _Version = 5;
+        _Version = 6;
+        if (_Version >= 6)
+        {
+            _isVersion6 = true;
+            fh = false;
+            z_eGZ = false;
+            z_e4Z = false;
+            z_e7Z = false;
+        }
     }
 
     public void read(net.rim.tools.compiler.io.StructuredInputStream __input, boolean flag)
@@ -137,19 +149,31 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
         _Flags = __input.readUnsignedByte() & 0x37;
         _Version = __input.readUnsignedByte();
         z_eYZ = false;
+        fh = false;
         z_eGZ = false;
         z_e4Z = false;
         z_e7Z = false;
         if(_Version >= 4)
         {
             z_eYZ = true;
+            fh = true;
             z_e4Z = true;
             if(_Version >= 5)
             {
                 z_e7Z = true;
                 z_eGZ = true;
             }
+            if(_Version >= 6)
+            {
+                _isVersion6 = true;
+                z_eYZ = false;
+                fh = false;
+                z_eGZ = false;
+                z_e4Z = false;
+                z_e7Z = false;
+            }
         }
+        System.out.println("!!!! VERSION = " + Integer.toString(_Version));
         if(!_aliasesFlag);
         _iCallsNumber = __input.readUnsignedShort();
         int _numModules_ = __input.readUnsignedByte();
@@ -271,10 +295,11 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
         process_intdStaticData(__input, l, flag);
         __input.moveCurrentIdxtoOffset(_offsetClassRefs_);
         addClassRefs(__input, _routineFixups.getOffset());
+/*        
         if(!z_eYZ)
             _doaZ(__input, _routineFixups, flag);
         else
-            z_eYZ = _ifaZ(__input, _routineFixups, flag);
+            z_eYZ = _ifaZ(__input, _routineFixups, flag); // I think this is wrong... new version assigns retval of this to another flag
         z_e4Z = _doaZ(__input, _staticRoutineFixups, flag);
         _doaZ(__input, _virtualRoutineFixups, flag);
         if(!z_eYZ) //!z_eYZ --- demo files from BB JDE produce error here when !z_eYZ
@@ -293,6 +318,34 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
             _aaV(__input, _moduleCodeFixups, false);
         else
             addInterfaceMethodRefs(__input, flag);
+  */      
+        if(!z_eYZ)
+        	_doaZ(__input, _routineFixups, true, flag);
+        else
+        	fh = _ifaZ(__input, _routineFixups, true, flag);
+        if(!z_eYZ)
+            _doaZ(__input, _staticRoutineFixups, true, flag);
+        else
+            z_e4Z = _ifaZ(__input, _staticRoutineFixups, true, flag);
+        _doaZ(__input, _virtualRoutineFixups, true, flag);
+        if(!z_eYZ)
+            _aaV(__input, _classCodeFixups);
+        else
+            create_classDefFixupTable(__input, _classCodeFixups);
+        if(!_aliasesFlag)
+            _aaV(__input, _classDataFixups);
+        _doaZ(__input, _fieldsFixups, false, flag);
+        _foraV(__input, _localFieldsFixups, flag);
+        if(!z_eGZ)
+            _doaZ(__input, _staticFieldsFixups, false, flag);
+        else
+            z_eGZ = _ifaZ(__input, _staticFieldsFixups, false, flag);
+        if(_aliasesFlag)
+            _aaV(__input, _moduleCodeFixups, false);
+        else
+            addInterfaceMethodRefs(__input, flag);
+        
+        
         __input.verifySlack(4);
         setExtent(__input.getOffset());
         byte abyte0[] = _codFile._bKvaB();
@@ -339,9 +392,13 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
             _aagBIV(_moduleCodeFixups, abyte1, i2);
         if(!flag)
         {
-            if(!z_eYZ)
+            /*if(!z_eYZ)
+                _foraBIV(abyte1, i2);*/
+        	if(!z_eYZ || !fh)
                 _foraBIV(abyte1, i2);
-            update_staticRoutineFixupTable(abyte1, i2);
+            /*update_staticRoutineFixupTable(abyte1, i2);*/
+        	if(!z_e4Z)
+                update_staticRoutineFixupTable(abyte1, i2);
             _intaBIV(abyte1, i2);
             update_fieldFixupTable(_fieldsFixups, abyte1, i2);
             update_fieldFixupTable(_localFieldsFixups, abyte1, i2);
@@ -496,7 +553,17 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
     {
         __input.verifySlack(_classRefs.getAlign());
         __input.verifyOffset(_classRefs.getOffset(), "class refs");
-        for(; __input.getOffset() < __offset; _classRefs.addElement(new net.rim.tools.compiler.codfile.ClassRef(__input, this, _classRefs.size())));
+        System.out.println("-- Adding class refs from 0x" + Integer.toHexString(__input.getOffset()) + " to 0x" +
+                Integer.toHexString(__offset));
+        for(
+                ;__input.getOffset() < __offset
+                ;)
+        {
+            System.out.println("---- Adding classref Ord " + Integer.toHexString(_classRefs.size()) + " at offset 0x" + Integer.toHexString(__input.getOffset()));
+            net.rim.tools.compiler.codfile.ClassRef classRef = new net.rim.tools.compiler.codfile.ClassRef(__input, this, _classRefs.size());
+            System.out.println("---- (ref name is ... " + classRef.getClassName().getString() + ")");
+            _classRefs.addElement(classRef);
+        }
     }
 
     public void _amvV()
@@ -516,14 +583,16 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
 
     }
 
-    public boolean _doaZ(net.rim.tools.compiler.io.StructuredInputStream __input, net.rim.tools.compiler.codfile.CodfileVector ag1, boolean flag)
+    public boolean _doaZ(net.rim.tools.compiler.io.StructuredInputStream __input, net.rim.tools.compiler.codfile.CodfileVector ag1, boolean mebbeIsRoutineFixups, boolean flag)
         throws IOException
     {
         boolean flag1 = true;
+        boolean needsAdvancedMemberRef = mebbeIsRoutineFixups && _isVersion6;
         __input.verifySlack(ag1.getAlign());
         __input.verifyOffset(ag1.getOffset(), "member fixup table");
-        int l = MemberRef._SvI();
+        int elementSize = needsAdvancedMemberRef ? net.rim.tools.compiler.codfile.AdvancedMemberRef._SvI() : net.rim.tools.compiler.codfile.MemberRef._SvI();
         int i1 = __input.readShort();
+        System.out.println("Read " + Integer.toString(i1) + " members, each " + Integer.toString(elementSize) + "bytes");
         if(i1 < 0)
         {
             i1 = -i1;
@@ -535,7 +604,7 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
             __input.verifySlack(2);
             if(flag)
             {
-                __input.skipBytes(l);
+                __input.skipBytes(elementSize);
                 if(_aliasesFlag)
                 {
 					int k1 = __input.readUnsignedShort1();
@@ -547,34 +616,41 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
                 }
             } else
             {
-                net.rim.tools.compiler.codfile.MemberRef j2 = new net.rim.tools.compiler.codfile.MemberRef(__input, this);
-                ag1.addElement(new net.rim.tools.compiler.codfile.FixupTableEntry(__input, j2, 2, _aliasesFlag, false));
+                //net.rim.tools.compiler.codfile.MemberRef j2 = new net.rim.tools.compiler.codfile.MemberRef(__input, this);
+                net.rim.tools.compiler.codfile.MemberRef memberRef = 
+                	needsAdvancedMemberRef ?
+                			new net.rim.tools.compiler.codfile.AdvancedMemberRef(__input, this) :
+                				new net.rim.tools.compiler.codfile.MemberRef(__input, this);
+                ag1.addElement(new net.rim.tools.compiler.codfile.FixupTableEntry(__input, memberRef, 2, _aliasesFlag, false));
             }
         }
 
         return flag1;
     }
 
-    public boolean _ifaZ(net.rim.tools.compiler.io.StructuredInputStream __input, net.rim.tools.compiler.codfile.CodfileVector __codFileVector, boolean flag)
+    public boolean _ifaZ(net.rim.tools.compiler.io.StructuredInputStream __input, net.rim.tools.compiler.codfile.CodfileVector __codFileVector,  boolean mebbeIsRoutineFixups, boolean flag)
         throws IOException
     {
         boolean flag1 = true;
+        boolean needsAdvancedMemberRef = mebbeIsRoutineFixups && _isVersion6;
         __input.verifySlack(__codFileVector.getAlign());
         __input.verifyOffset(__codFileVector.getOffset(), "implied member fixup table");
-        int l = MemberRef._SvI();
+        int elementSize = needsAdvancedMemberRef ? net.rim.tools.compiler.codfile.AdvancedMemberRef._SvI() : net.rim.tools.compiler.codfile.MemberRef._SvI();
         int i1 = __input.readShort();
+        System.out.println("Read " + Integer.toString(i1) + " members, each " + Integer.toString(elementSize) + "bytes");
         if(i1 < 0)
         {
             i1 = -i1;
             flag1 = false;
             __codFileVector.negatePrefix();
         }
+        if (!flag1) System.out.println(">>>>><<<<<");
         for(int j1 = 0; j1 < i1; j1++)
         {
             __input.verifySlack(2);
             if(flag)
             {
-                __input.skipBytes(l);
+                __input.skipBytes(elementSize);
                 if(!flag1)
                     if(_aliasesFlag)
                     {
@@ -587,8 +663,11 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
                     }
             } else
             {
-                net.rim.tools.compiler.codfile.MemberRef j2 = new net.rim.tools.compiler.codfile.MemberRef(__input, this);
-                __codFileVector.addElement(new net.rim.tools.compiler.codfile.FixupTableEntry(__input, j2, 2, _aliasesFlag, flag1));
+                net.rim.tools.compiler.codfile.MemberRef memberRef = 
+                	needsAdvancedMemberRef ?
+                			new net.rim.tools.compiler.codfile.AdvancedMemberRef(__input, this) :
+                				new net.rim.tools.compiler.codfile.MemberRef(__input, this);
+                __codFileVector.addElement(new net.rim.tools.compiler.codfile.FixupTableEntry(__input, memberRef, 2, _aliasesFlag, flag1));
             }
         }
 
@@ -832,7 +911,7 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
         }
     }
 
-    public net.rim.tools.compiler.codfile.Routine _yIa5(int l)
+    public net.rim.tools.compiler.codfile.Routine getVirtualRoutine(int l)
         throws IOException
     {
         Object obj = null;
@@ -846,7 +925,20 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
         {
             obj = new net.rim.tools.compiler.codfile.RoutineNull(_ClassDef, this);
             ((net.rim.tools.compiler.codfile.CodfileItem) (obj)).setAddress(l);
-            ((net.rim.tools.compiler.codfile.Member) (obj))._ifStringvV("virtual_", l);
+            
+            /* equals/toString via observed behavior */
+            switch (l) {
+            case 1:
+            	((net.rim.tools.compiler.codfile.Member) (obj))._ifStringvV("equals", 0);
+          		break;
+            case 2:
+            	((net.rim.tools.compiler.codfile.Member) (obj))._ifStringvV("toString", 0);
+          		break;
+          		
+          	default:
+                ((net.rim.tools.compiler.codfile.Member) (obj))._ifStringvV("virtual_", l);
+          		break;
+            }
         }
         return ((net.rim.tools.compiler.codfile.Routine) (obj));
     }
@@ -872,7 +964,7 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
         }
     }
 
-    public net.rim.tools.compiler.codfile.FieldDef _tIw(int l)
+    public net.rim.tools.compiler.codfile.FieldDef getField(int l)
         throws IOException
     {
         if(l < -1)
@@ -886,7 +978,7 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
         net.rim.tools.compiler.codfile.TypeList p = _TypeLists.getNullTypeList();
         net.rim.tools.compiler.codfile.FieldDefLocal ab1 = new net.rim.tools.compiler.codfile.FieldDefLocal(_ClassDef, ak1, p, false);
         ab1.setAddress(l);
-        ab1._ifStringvV("field_", l);
+        ab1._ifStringvV("field_"+l+"_", l);
         return ab1;
     }
 
@@ -1622,6 +1714,16 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
             return af1.getClassDef(__classOrdinal);
         }
     }
+    
+    public void cockItUp()
+    {
+    	for (int i =0; i < _modules.size(); i++) {
+    		net.rim.tools.compiler.codfile.Module m = (net.rim.tools.compiler.codfile.Module)_modules.elementAt(i);
+    		if (m == null) continue;
+    		System.out.println("$$ " + i + " " + m.get_Name() + " " + m.get_name_1() + " " + m.get_name_2() + " ");
+    		m.cockItUp();
+    	}
+    }
 
     public net.rim.tools.compiler.codfile.ClassDef findClassDef(int __moduleOrdinal, int __classOrdinal)
         throws IOException
@@ -1630,17 +1732,43 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
             return _ClassDef;
         if(__moduleOrdinal == 0)
             return getClassDef(__moduleOrdinal, __classOrdinal);
+        //System.out.println(">> findClassDef(" + __moduleOrdinal + ", " + __classOrdinal + ")");
         net.rim.tools.compiler.codfile.Module af1 = (net.rim.tools.compiler.codfile.Module)_modules.elementAt(__moduleOrdinal);
         if((af1 instanceof net.rim.tools.compiler.codfile.ModuleRef) || (af1 instanceof net.rim.tools.compiler.codfile.ModuleForeign))
             return af1.getClassDef(__classOrdinal);
+        int __origClassOrd = __classOrdinal;
+        //System.out.println(">>> We have " + _classRefs.size() + " class refs");
         for(int j1 = _classRefs.size(); __classOrdinal < j1; __classOrdinal += 256)
         {
             net.rim.tools.compiler.codfile.ClassRef at1 = (net.rim.tools.compiler.codfile.ClassRef)_classRefs.elementAt(__classOrdinal);
+            //System.out.println(">>>> Try classord " + __classOrdinal + " hiz modord is " + at1.getModuleNum());
             if(at1.getModuleNum() == __moduleOrdinal)
                 return at1.getClassDef();
         }
 
-        throw new IOException("no class ref found for module: " + __moduleOrdinal + " class ordinal: " + __classOrdinal);
+/*        System.out.println(">> findClassDef ModOrd " + __moduleOrdinal + " ClassOrd " + __classOrdinal);
+        System.out.println("-- We have " + _classRefs.size() + " class refs");
+        for (int me = 0; me < _classRefs.size(); me++) {
+        	ClassRef cr = (ClassRef)_classRefs.elementAt(me);
+        	System.out.println("---- ClassOrd " + me + " ModOrd " + cr.getModuleNum() + " ClsName " + cr.getClassName().getString());
+        }
+        System.out.println("-- We have " + _modules.size() + " modules");
+        for (int me = 0; me < _modules.size(); me++) {
+        	Module mo = (Module)_modules.elementAt(me);
+        	System.out.println("---- Idx " + me + " ModOrd " + mo.getOrdinal() + " Name? " + mo.getName().getString() + " CDefs " + mo.getNumClassDefs());
+        	for (int cdi = 0; cdi < mo.getNumClassDefs(); cdi++) {
+        		ClassDef cd = mo.getClassDef(cdi);
+        		System.out.println("------ Idx " + cdi + " Cns " + cd.getClassNameString() + " Ord " + cd.getOrdinal());
+        	}
+        }*/
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println("  Something's fucked, so let's just return getClassDef(" + __moduleOrdinal + "," + __origClassOrd + ")...");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>");
+        
+        net.rim.tools.compiler.codfile.ClassDef fuckRef = getClassDef(__moduleOrdinal, __origClassOrd);
+        System.out.println(fuckRef.get_Name() + " " + fuckRef.get_name_1() + " " + fuckRef.get_name_2() + " " + fuckRef.getClassNameString());
+        return fuckRef;
+        //throw new IOException("no class ref found for module: " + __moduleOrdinal + " class ordinal: " + __classOrdinal);
     }
 
     public net.rim.tools.compiler.codfile.ClassRef getClassRef(int __offset)
@@ -1714,5 +1842,10 @@ public final class DataSection extends net.rim.tools.compiler.codfile.CodfileIte
             return _virtualRoutineFixups;
         }
         return null;
+    }
+    
+    public boolean isVersion6()
+    {
+    	return _isVersion6;
     }
 }

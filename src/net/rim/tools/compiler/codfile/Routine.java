@@ -225,7 +225,11 @@ public abstract class Routine extends net.rim.tools.compiler.codfile.Member
                     z_fIStringBuffer.append(super._typeList.get_baseType().getTypeName());
                     z_fIStringBuffer.append(" ");
                 }
-                z_fIStringBuffer.append(super._name.getString());
+                if (super._name.getString().length() == 0) {
+                    z_fIStringBuffer.append(super.get_Name());
+                } else {
+                    z_fIStringBuffer.append(super._name.getString());
+                }
                 z_fIStringBuffer.append("( ");
                 int i = _protoTypeList.length();
                 for(int l = 0; l < i; l++)

@@ -4,9 +4,18 @@
 
 package net.rim.tools.compiler.exec;
 
-import java.util.Comparator;
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< SCL FIX: Won't compile
+//import java.util.Comparator;
+//
+//public interface Comparator
+//    extends Comparator
+//{
+//}
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SCL FIX: Get rid of import, explicitly name the other Comparator class
+//import java.util.Comparator;
 
 public interface Comparator
-    extends Comparator
+    extends java.util.Comparator
 {
 }
+

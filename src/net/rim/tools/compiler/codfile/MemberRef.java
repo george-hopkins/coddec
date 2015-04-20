@@ -46,8 +46,19 @@ public class MemberRef extends net.rim.tools.compiler.codfile.CodfileItem
     public MemberRef(net.rim.tools.compiler.io.StructuredInputStream __input, net.rim.tools.compiler.codfile.DataSection __dataSection)
         throws IOException
     {
-        _classRef = __dataSection.getClassRef(__input.readUnsignedShort());
+        int mbrOfs = __input.getOffset();
+        int crOfs = __input.readUnsignedShort();
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println("> ofs 0x" + Integer.toHexString(mbrOfs) + " -> CR 0x" + Integer.toHexString(crOfs));
+
+        _classRef = __dataSection.getClassRef(crOfs);
+        //_classRef = __dataSection.getClassRef(__input.readUnsignedShort());
+
+        System.out.println("In class(?) " + _classRef.getClassName().getString());
+
         _name = __dataSection.getDataBytes().get_identifier(__input.readUnsignedShort());
+        System.out.println("member " + _name.getString());
+
         _typeListOffset = __input.readUnsignedShort();
     }
 

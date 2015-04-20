@@ -181,18 +181,26 @@ public abstract class ClassDef extends net.rim.tools.compiler.codfile.CodfileIte
         }
     }
 
-    public void addFieldDef(net.rim.tools.compiler.codfile.FieldDef w1, boolean flag)
+    public void addFieldDef(net.rim.tools.compiler.codfile.FieldDef w1, boolean isStatic)
     {
+    	if (!isStatic) {
+    		System.out.println("----------------- addFieldDef");
+    		try {
+    			throw new Exception("yay");
+    		} catch (Exception e) {
+    			e.printStackTrace();
+    		}
+    	}
         net.rim.tools.compiler.codfile.CodfileArray o1 = null;
-        if(flag)
+        if(isStatic)
         {
             if(_staticFieldDefs == null)
-                allocateFieldDefs(1, flag);
+                allocateFieldDefs(1, isStatic);
             o1 = _staticFieldDefs;
         } else
         {
             if(_fieldDefs == null)
-                allocateFieldDefs(1, flag);
+                allocateFieldDefs(1, isStatic);
             o1 = _fieldDefs;
         }
         int i = o1.getExtent();

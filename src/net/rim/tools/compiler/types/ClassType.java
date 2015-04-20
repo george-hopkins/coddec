@@ -177,6 +177,7 @@ public final class ClassType extends net.rim.tools.compiler.types.ReferenceType
 
     public void set_className(String s)
     {
+    	System.out.println("SET CLASS NAME TO " + s);
         f_className_nv = s;
     }
 

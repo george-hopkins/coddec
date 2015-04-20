@@ -18,6 +18,7 @@ public final class coddec
 	private static Hashtable _codfiles = null;
 	private static Hashtable _imports = null;
 	private static StringBuffer _output = null;
+	public static String currentFileHackCrap;
 	
 	public coddec ()
 	{
@@ -88,6 +89,9 @@ public final class coddec
 	{
 		String s1= "";
 		net.rim.tools.compiler.codfile.Module _module_ = (net.rim.tools.compiler.codfile.Module)_modules.get(__moduleName);
+		System.err.println(">>>>>>>>>>>>>>>>>>>>>>>>>>");
+		System.err.println(">>>> Attempting to parse " + __moduleName + ".cod");
+		System.err.println(">>>>>>>>>>>>>>>>>>>>>>>>>>");
 		if (_module_ == null)
 		{
 			
@@ -129,11 +133,12 @@ public final class coddec
 	
 	public static String getTypeName (net.rim.tools.compiler.codfile.TypeItem __typeItem)
 	{
-		String _typeName_ ="";
+		String _typeName_ =""; String _origTypeName_="";
 		
 		if (__typeItem != null)
 		{
 			_typeName_ = __typeItem.getTypeName();
+			_origTypeName_ = __typeItem.getTypeName();
 			
 			if (_typeName_.contains("."))
 			{
@@ -155,7 +160,7 @@ public final class coddec
 		}
 		else
 			_typeName_ = "void";
-		return _typeName_;
+		return _typeName_ + " /*"+_origTypeName_+"*/ ";
 	}
 	
 	public static String getTypeName (net.rim.tools.compiler.codfile.ClassDef __classDef)
@@ -480,12 +485,15 @@ public final class coddec
 					__message.append(getTypeName( _type_) + " ");
 					
 					// Field name
+					// The field.getName.get_Name does not jive with the members in the disassembled code
+					// (are they different objects???.......) so always use the offset (maybe)
 					if (!(_field_.getName().get_Name() != null && _field_.getName().get_Name().length() == 0))
 						__message.append (_field_.getName().get_Name() + " ");
 					// Changes
 					// We leave only defined fields, not fields by offset
-					else
+					else {
 						__message.append ("field_" + _field_.getOffset() + " ");
+					}
 					
 					// Field initial value
 					if (!_clinit_)
@@ -495,7 +503,9 @@ public final class coddec
 						//_code_.
 					}
 					// End of field section
-					__message.append("; \r\n");
+					__message.append(";");
+					__message.append(" // ofs = " + _field_.getOffset() + " addr = " + _field_.getAddress());
+					__message.append(")\r\n");
 				}
 				__message.append("\r\n");
 			}
@@ -672,12 +682,30 @@ public final class coddec
 					{
 						case 0:
 							_routineLocal_ = (net.rim.tools.compiler.codfile.RoutineLocal)_classDefLocal_.getStaticRoutine(i);
+							System.out.println("STAT " + _routineLocal_.get_Name());
+							System.out.println("STAT OF" + _routineLocal_.getAddress());
+							System.out.println("STAT OF" + _routineLocal_.getOffset());
+							System.out.println("STAT OR" + _routineLocal_.getOrdinal());
+							System.out.println("STAT V1" + _routineLocal_.getVTableOffset(true));
+							System.out.println("STAT V2" + _routineLocal_.getVTableOffset(false));
 							break;
 						case 1:
 							_routineLocal_ = (net.rim.tools.compiler.codfile.RoutineLocal)_classDefLocal_.get_nonVirtualRoutine(i);
+							System.out.println("NVRT " + _routineLocal_.get_Name());
+							System.out.println("NVRT OF" + _routineLocal_.getAddress());
+							System.out.println("NVRT OF" + _routineLocal_.getOffset());
+							System.out.println("NVRT OR" + _routineLocal_.getOrdinal());
+							System.out.println("NVRT V1" + _routineLocal_.getVTableOffset(true));
+							System.out.println("NVRT V2" + _routineLocal_.getVTableOffset(false));
 							break;
 						case 2:
 							_routineLocal_ = (net.rim.tools.compiler.codfile.RoutineLocal)_classDefLocal_.getVirtualRoutine(i);
+							System.out.println("VIRT " + _routineLocal_.get_Name());
+							System.out.println("VIRT OF" + _routineLocal_.getAddress());
+							System.out.println("VIRT OF" + _routineLocal_.getOffset());
+							System.out.println("VIRT OR" + _routineLocal_.getOrdinal());
+							System.out.println("VIRT V1" + _routineLocal_.getVTableOffset(true));
+							System.out.println("VIRT V2" + _routineLocal_.getVTableOffset(false));
 							break;
 						default:
 							break;
@@ -710,11 +738,13 @@ public final class coddec
 					//if (_routineAttributes.length() != 0)
 					//{
 					__message.append(_routineAttributesString_);
+					System.err.println("APPEND AS " + _routineAttributesString_);
 					//}
 					//else
 					//	break;
 					
 					__message.append(_routineLocal_.get_Name());
+					System.err.println("APPEND NM " + _routineLocal_.get_Name());
 					// Return type
 					//net.rim.tools.compiler.codfile.TypeItem _returnType_ = _routineLocal_.getTypeList().get_baseType();
 					//__message.append(getTypeName(_returnType_) + " ");
@@ -733,6 +763,9 @@ public final class coddec
 					//CHANGES:
 					//ADDED semi-colon after function header
 					__message.append(";");
+					
+					__message.append(" // address: " + _routineLocal_.getAddress());
+					
 					__message.append("\r\n");
 					
 					// exceptions
@@ -838,7 +871,7 @@ public final class coddec
 		{
 			if(!_packageFolder_.mkdirs())
 			{
-				System.out.println("Problem creating package " + __packageName + " folders");
+				System.err.println("Problem creating package " + __packageName + " folders");
 				_packagePath_ = "";
 				return _packagePath_;
 			}
@@ -855,8 +888,13 @@ public final class coddec
 		{
 			StringBuffer _stringBuf_ = new StringBuffer();
 			StringBuffer _importsBuf_ = new StringBuffer("");
-			
-			String _pathString =createPackagePath(__classDef.getPackageNameString()) + "\\"+ __classDef.getClassNameString() +  ".java";
+
+			String _pathString =createPackagePath(currentFileHackCrap + "\\" + __classDef.getPackageNameString()) + "\\"+ __classDef.getClassNameString() +  ".java";
+			File fofo = new File(_pathString);
+			if (fofo.exists()) {
+				System.err.println("DUP PATH " + _pathString);
+				_pathString = createPackagePath(currentFileHackCrap + "\\" + __classDef.getPackageNameString()) + "\\"+ __classDef.getClassNameString() + "__" + Math.abs(new Random().nextInt()) + "" + Math.abs(new Random().nextInt()) +  ".java";
+			}
 			FileOutputStream _javaOutputStream_ = new FileOutputStream(_pathString);
 			try
 			{
@@ -931,7 +969,7 @@ public final class coddec
 		}
 	}
 	
-	private static void parseFile (String __fileName)
+	public static void parseFile (String __fileName)
 	{
 		File _file_ = new File(__fileName);
 		if (_file_.exists())
@@ -979,6 +1017,7 @@ public final class coddec
 			for (int k = 0; k < i; k++)
 			{
 				String s = args[k];
+				_coddec.currentFileHackCrap = s.replaceFirst(".cod", "");;
 				parseFile(s);
 				
 				net.rim.tools.compiler.codfile.Module _module_ = null;
